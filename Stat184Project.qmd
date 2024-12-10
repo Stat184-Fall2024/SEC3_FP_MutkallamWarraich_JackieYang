@@ -1,5 +1,5 @@
 ---
-title: "Factors that affect Student Performance "
+title: "Factors That Affect Student Performance In Exams"
 author: "Mutkallam Warraich and Jackie Yang"
 format: html
 date: today
@@ -7,4 +7,34 @@ self-contained: true
 toc: true
 ---
 
-# Introduction
+## Introduction to the Dataset
+
+The dataset we will be analyzing today focuses on various factors that affect student performance in exams. The "Student Performance Factors" dataset was found in kaggle and was meant to be used for data analysis for research on projects. There are 20 attributes that were recorded for 6,607 students with detailed information on each. The attributes cover a wide range of factors, including study habits, attendance, parental involvement, and more. The factors are listed below with the last column being their performance in the exams.
+
+```{r}
+data = read.csv("StudentPerformanceFactors.csv")
+data.frame(Column.Names = names(data))
+```
+### Fair Principles
+
+The dataset follows FAIR principles in multiple ways. For findability(F), the dataset was published on the website, Kaggle. It is also full of metadata and has unique identifiers. For accessibility(A), the dataset is available in multiple formats and is also on a public sourced website. For interoperability(I), the data uses standard formats and also commonly used vocabulary for compatibility with different IDES and languages. For reusability(R), the dataset has detailed information with no missing values for better analysis. It is also stored in a reliable way to download and use.
+
+### Research Question
+
+The "Student Performance Factors" dataset is highly valuable for understanding how performance is impacted by different attributes. 19 factors were recorded to analyze their relationship to exam scores. For our research, we want to identify which factors have the most significant impact on exam scores.
+
+## Exploring the Data
+
+Now that we know what the dataset is about, we can do exploratory data analysis to get a better understanding of the data before starting to answer our research question.
+```{r}
+#| warning: false
+library(dplyr)
+
+data %>%
+  group_by(Tutoring_Sessions) %>%
+  summarise(
+    Mean_Exam_Score = mean(Exam_Score, na.rm = TRUE),
+    Median_Exam_Score = median(Exam_Score, na.rm = TRUE))
+```
+
+
