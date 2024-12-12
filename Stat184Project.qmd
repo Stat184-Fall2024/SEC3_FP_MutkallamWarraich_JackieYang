@@ -5,6 +5,8 @@ format: html
 date: today
 self-contained: true
 toc: true
+theme:
+  dark: darkly
 ---
 
 ## Introduction to the Dataset
@@ -29,12 +31,33 @@ Now that we know what the dataset is about, we can do exploratory data analysis 
 ```{r}
 #| warning: false
 library(dplyr)
+library(ggplot2)
 
-data %>%
+tutor_data <- data %>%
   group_by(Tutoring_Sessions) %>%
   summarise(
-    Mean_Exam_Score = mean(Exam_Score, na.rm = TRUE),
-    Median_Exam_Score = median(Exam_Score, na.rm = TRUE))
+    Mean_Exam_Score = mean(Exam_Score, na.rm = TRUE))
+
+ggplot(tutor_data, aes(x = Tutoring_Sessions, y = Mean_Exam_Score, fill = Tutoring_Sessions)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Tutoring Sessions",
+    x = "Sessions",
+    y = "Average Score")
 ```
 
+```{r}
+Resources_data <- data %>%
+  group_by(Access_to_Resources) %>%
+  summarise(count = n())
 
+ggplot(Resources_data, aes(x = "", y = count, fill = Access_to_Resources)) +
+  geom_bar(stat = "identity") +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = count), position = position_stack(vjust = 0.5), fontface = 'bold') +
+  labs(
+    title = "Count of Access to Resources") + 
+  theme_void() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"))
+```
