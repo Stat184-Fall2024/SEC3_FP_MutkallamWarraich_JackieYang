@@ -12,17 +12,12 @@ theme:
 
 ## Introduction to the Dataset
 
-The dataset we will be analyzing today focuses on various factors that affect student performance in exams. The "Student Performance Factors" dataset was found in kaggle and was meant to be used for data analysis for research on projects. There are 20 attributes that were recorded for 6,607 students with detailed information on each. The attributes cover a wide range of factors, including study habits, attendance, parental involvement, and more. The factors are listed below with the last column being their performance in the exams.
+The dataset we will be analyzing today focuses on various factors that affect student performance in exams. The "Student Performance Factors" dataset was found in Kaggle^[Me, Practice Data Analysis With. “Student Performance Factors.” Kaggle, 26 Nov. 2024, www.kaggle.com/datasets/lainguyn123/student-performance-factors.] and was meant to be used for data analysis for research on projects. There are 20 attributes that were recorded for 6,607 students with detailed information on each. The attributes cover a wide range of factors, including study habits, attendance, parental involvement, and more. The factors are listed below with the last column being their performance in the exams. Along with this, you can also see the first few rows and columns of the data to understand its layout.
 
 ```{r}
 data = read.csv("StudentPerformanceFactors.csv")
 data.frame(Column.Names = names(data))
-```
-
-```{r}
-#| echo: false
-#| eval: false
-print(data)
+head(data[1:4])
 ```
 
 ## Fair Principles
@@ -35,19 +30,44 @@ The "Student Performance Factors" dataset is highly valuable for understanding h
 
 ## Exploring the Data
 
-By using a correlation matrix, we can take a look at the correlation coefficient of every variable with respect to the response variable, Exam Score. However, this method can only be used for quantitative variables. As a result, the variables with the highest correlation seem to be Hours Studied, Attendance, Previous Scores, and Tutoring Sessions. All of these correlation coefficients are positive, indicating that with as the number for these variables increase, Exam Score also increases.
+By using a correlation matrix, we can take a look at the correlation coefficient of every variable with respect to the response variable, Exam Score. However, this method can only be used for quantitative variables. As a result, the variables with the highest correlation seem to be Hours Studied, Attendance, Previous Scores, and Tutoring Sessions. All of these correlation coefficients are positive, indicating that as the number for these variables increase, exam score also increases.
 
 ```{r}
-library(ggplot2)
+#| warning: false 
+#| fig-cap: "Figure 1: Correlation Matrix"
 library(corrplot)
 numeric_data <- data[sapply(data, is.numeric)]
 correlation_matrix <- cor(numeric_data, method = "pearson")
-corrplot(correlation_matrix, method = "number", type = 'lower')
+corrplot(correlation_matrix, 
+         method = "number", 
+         type = 'lower',
+         tl.col = "black",
+         col = colorRampPalette(c("black", "black", "grey"))(100),
+         number.cex = .8
+        )
 ```
 
+Judging from the correlation matrix, predictors are not highly correlated, so multicollinearity is not a problem.
 As for the categorical variables, we can use side-by-side boxplots to view the relationship between them and students' exam scores.
 
 ```{r}
+#| fig-cap: "Figure 2: Boxplots for Categorical Variables"
+#| fig-subcap:
+#| - "Parental Involvement"
+#| - "Access to Resources"
+#| - "Extracurricular Activities"
+#| - "Motivation Level"
+#| - "Internet Access"
+#| - "Family Income"
+#| - "Teacher Quality"
+#| - "School Type"
+#| - "Peer Influence"
+#| - "Learning Disabilities"
+#| - "Parental Education Level"
+#| - "Distance From Home"
+#| - "Gender"
+#| 
+#| layout-ncol: 3
 library(ggplot2)
 ggplot(data, aes(x = Parental_Involvement, y = Exam_Score, fill = Parental_Involvement)) + 
   geom_boxplot() + 
@@ -57,7 +77,7 @@ ggplot(data, aes(x = Access_to_Resources, y = Exam_Score, fill = Access_to_Resou
   ggtitle("Exam Score Distribution Based On Access to Resources")
 ggplot(data, aes(x = Extracurricular_Activities, y = Exam_Score, fill = Extracurricular_Activities)) + 
   geom_boxplot() + 
-  ggtitle("Exam Score Distribution Based On Extracirricular Activities")
+  ggtitle("Exam Score Distribution Based On Extracurricular Activities")
 ggplot(data, aes(x = Motivation_Level, y = Exam_Score, fill = Motivation_Level)) + 
   geom_boxplot() + 
   ggtitle("Exam Score Distribution Based On Motivation Level")
@@ -91,9 +111,13 @@ ggplot(data, aes(x = Gender, y = Exam_Score, fill = Gender)) +
 ```
 
 
-Now that we know what the dataset is about, we can do exploratory data analysis to get a better understanding of the data before starting to answer our research question.
+Now that we have done some exploratory data analysis, we can take a closer look at some attributes to see how they make up the dataset before starting to answer our research question.
+
+For the following graph, we can see that the average score per tutoring sessions generally increases. This happens till 6 where it starts to level out.
+
 ```{r}
 #| warning: false
+#| fig-cap: "Figure 3: Tutoring Sessions and Average Score"
 library(dplyr)
 library(ggplot2)
 
@@ -110,7 +134,11 @@ ggplot(tutor_data, aes(x = Tutoring_Sessions, y = Mean_Exam_Score, fill = Tutori
     y = "Average Score")
 ```
 
+
+For the following pie chart, we can see the access to resources from low to high and how they are distributed among the population.
+
 ```{r}
+#| fig-cap: "Figure 4: Pie Chart"
 Resources_data <- data %>%
   group_by(Access_to_Resources) %>%
   summarise(count = n())
@@ -125,11 +153,21 @@ ggplot(Resources_data, aes(x = "", y = count, fill = Access_to_Resources)) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"))
 ```
+
 ## Methodology
 
-To determine the best model to fit the data, Akaike's Information Criteria (AIC) can be used.
+Now that we have done exploratory data analysis, we can start answering our research question. To determine the best model to fit the data, Akaike's Information Criteria (AIC) can be used.
 
 $AIC = nlog(\frac{SSE}{n}) + 2k$
+
+```{r}
+nullModel = lm(Exam_Score ~ 1, data = data)
+fullModel = lm(Exam_Score ~ Hours_Studied + Attendance + Parental_Involvement + Access_to_Resources + Extracurricular_Activities + Sleep_Hours + Previous_Scores + Motivation_Level + Internet_Access + Tutoring_Sessions + Family_Income + Teacher_Quality + School_Type + Peer_Influence + Physical_Activity + Learning_Disabilities + Parental_Education_Level + Distance_from_Home + Gender, data = data)
+stepBothAIC = step(nullModel, scope = list(lower = nullModel, upper = fullModel), direction = "both", k = 2)
+summary(stepBothAIC)
+aic_value3 = AIC(stepBothAIC)
+```
+Judging from the results of the AIC procedure, it looks like some variables were not included in the final model. These variables include Sleep_Hours, School_Type, and Gender. Variables with a high p-value (> 0.05) may not be statistically significant. If this were the case, it is best to look at variables that are statistically significant. This includes all of the variables except for Parental_Education_Level, Teacher_Quality and Distance_from_Home. With all of these variables, a larger slope indicates that the variable has a more dramatic effect on the response variable, exam score. The top five variables with the most impact on exam score based on the AIC procedure are Access_to_Resources, Parental_Involvement, Family_Income, Peer_Influence, and Motivation_level respectively.
 
 ```{r codeAppend, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
 ```
